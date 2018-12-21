@@ -13,7 +13,7 @@ EBTNodeResult::Type UChoseNextWaypoint::ExecuteTask(UBehaviorTreeComponent & Own
 
 	AAIController *AIOwner = OwnerComp.GetAIOwner();
 	APawn *ControlledPawn = AIOwner->GetPawn();
-	auto *PatrollingGuard = Cast<ATP_ThirdPersonCharacter>(ControlledPawn);
+	auto *PatrollingGuard = Cast<ACharacter>(ControlledPawn);
 
 	//Get patrol route
 	auto BlackboardComp = OwnerComp.GetBlackboardComponent();
