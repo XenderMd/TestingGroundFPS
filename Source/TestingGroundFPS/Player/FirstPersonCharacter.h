@@ -67,6 +67,9 @@ protected:
 	 */
 	void LookUpAtRate(float Rate);
 
+	//Fires the gun
+	void OnFire();
+
 protected:
 
 	// APawn interface
@@ -82,6 +85,5 @@ public:
 
 private:
 	AGunCPP* Gun;
-
 };
 
