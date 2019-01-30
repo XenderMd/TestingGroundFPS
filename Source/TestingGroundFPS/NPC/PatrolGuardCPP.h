@@ -38,5 +38,5 @@ public:
 
 private:
 
-	AGunCPP* Gun;
+	//AGunCPP* Gun;
 };
