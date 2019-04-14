@@ -17,9 +17,6 @@ ATile_CPP::ATile_CPP()
 void ATile_CPP::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CastSphere(GetActorLocation() + FVector(0, 0, 0), 300);
-
 }
 
 // Called every frame
@@ -31,20 +28,13 @@ void ATile_CPP::Tick(float DeltaTime)
 
 
 
-void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, int MinSpawn, int MaxSpawn)
+void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpawn, int MaxSpawn)
 {
 
 	
 	FBox SpawnBoundingBox;
-	FBoxSphereBounds FloorBounds;
-	FVector FloorCenter;
-	FVector FloorExtent;
-	FVector Min;
-	FVector Max;
-	
-
+	FVector SpawnPoint;
 	UStaticMeshComponent *Floor;
-
 	int NumberToSpawn = FMath::RandRange(MinSpawn, MaxSpawn);
 	
 	//Get a reference to the Tile floor component
@@ -53,32 +43,72 @@ void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, int MinSpawn, int MaxSpa
 	//Check for null pointer
 	if (Floor != nullptr)
 	{
-		//Get the bounding box for the floor component in World coordinates
-		Floor->GetBodySetup()->AggGeom.CalcBoxSphereBounds(FloorBounds, FTransform(Floor->GetComponentToWorld()));
-		//Get floor parameters - for the center, again World Cooridinates
-		FloorCenter = FloorBounds.GetBox().GetCenter();
-		FloorExtent = FloorBounds.GetBox().GetExtent();
-		
-		//Calculate Min and Max based on the floor center and the floor extent  -> these will be again in World coordinates
-		//Since we want a "flat" spawning box, use the "Z" component of the extent vector to compensate for the center displacement on the Z axis
-		Min = FloorCenter - FVector(FloorExtent.X, FloorExtent.Y, -(FloorExtent.Z));
-		Max = FloorCenter + FVector(FloorExtent.X, FloorExtent.Y, FloorExtent.Z);
-		//Generate the spawn bounding box
-		SpawnBoundingBox = FBox(Min, Max);
+		SpawnBoundingBox = GetFloorSpawnBoundingBox(Floor);
 
 		//Spawn objects
 		for (size_t i = 0; i < NumberToSpawn; i++)
 		{
-			FVector SpawnPoint = FMath::RandPointInBox(SpawnBoundingBox);
-			AActor *Spawned = GetWorld()->SpawnActor<AActor>(ToSpawn, SpawnPoint, GetActorRotation());
-			// Since we used World coordinates -> EAttachmentRule::KeepWorld
-			Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
+			if (FindEmptyLocation(Radius, SpawnBoundingBox, SpawnPoint))
+			{
+				PlaceActor(ToSpawn, SpawnPoint);
+			}
 		}
 	}
 
 }
 
-bool ATile_CPP::CastSphere(FVector Location, float Radius)
+bool ATile_CPP::FindEmptyLocation(float Radius, FBox SpawnBoundingBox, FVector &OutSpawnPoint)
+{
+	FVector CandidatePoint;
+	const int MaxAttempts=100;
+	bool isFound = false;
+
+	for (int i = 0; i < MaxAttempts&&!isFound; i++)
+	{
+		CandidatePoint = FMath::RandPointInBox(SpawnBoundingBox);
+		isFound=CanSpawnAtLocation(CandidatePoint, Radius);
+	}
+
+
+	if (isFound) {OutSpawnPoint = CandidatePoint;}
+	return isFound;
+}
+
+void ATile_CPP::PlaceActor(TSubclassOf<AActor> ToSpawn, FVector SpawnPoint)
+{
+
+	AActor *Spawned = GetWorld()->SpawnActor<AActor>(ToSpawn, SpawnPoint, GetActorRotation());
+	// Since we used World coordinates -> EAttachmentRule::KeepWorld
+	Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
+
+}
+
+FBox ATile_CPP::GetFloorSpawnBoundingBox(UStaticMeshComponent * Floor)
+{
+	FBoxSphereBounds FloorBounds;
+	FBox SpawnBoundingBox;
+	FVector FloorCenter;
+	FVector FloorExtent;
+	FVector Min;
+	FVector Max;
+	
+	//Get the bounding box for the floor component in World coordinates
+	Floor->GetBodySetup()->AggGeom.CalcBoxSphereBounds(FloorBounds, FTransform(Floor->GetComponentToWorld()));
+	//Get floor parameters - for the center, again World Cooridinates
+	FloorCenter = FloorBounds.GetBox().GetCenter();
+	FloorExtent = FloorBounds.GetBox().GetExtent();
+
+	//Calculate Min and Max based on the floor center and the floor extent  -> these will be again in World coordinates
+	//Since we want a "flat" spawning box, use the "Z" component of the extent vector to compensate for the center displacement on the Z axis
+	Min = FloorCenter - FVector(FloorExtent.X, FloorExtent.Y, -(FloorExtent.Z));
+	Max = FloorCenter + FVector(FloorExtent.X, FloorExtent.Y, FloorExtent.Z);
+	//Generate the spawn bounding box
+	SpawnBoundingBox = FBox(Min, Max);
+
+	return SpawnBoundingBox;
+}
+
+bool ATile_CPP::CanSpawnAtLocation(FVector Location, float Radius)
 {
 	FHitResult HitResult;
 	bool HasHit=GetWorld()->SweepSingleByChannel(
@@ -92,6 +122,6 @@ bool ATile_CPP::CastSphere(FVector Location, float Radius)
 	FColor ResultColor = HasHit ? FColor::Red: FColor::Green;
 	DrawDebugCapsule(GetWorld(), Location, 0, Radius, FQuat::Identity, ResultColor, true, 100);
 
-	return HasHit;
+	return !HasHit;
 }
 

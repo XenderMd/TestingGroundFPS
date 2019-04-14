@@ -16,10 +16,16 @@ public:
 	ATile_CPP();
 	
 	UFUNCTION(BlueprintCallable, Category = "Setup")
-	void PlaceActors(TSubclassOf<AActor>ToSpawn, int MinSpawn, int MaxSpawn);
+	void PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpawn, int MaxSpawn);
 
 private:
-	bool CastSphere(FVector Location, float Radius);
+	bool CanSpawnAtLocation(FVector Location, float Radius);
+
+	bool FindEmptyLocation(float Radius, FBox SpawnBoundingBox, FVector &OutSpawnPoint);
+
+	void PlaceActor(TSubclassOf<AActor>ToSpawn, FVector SpawnPoint);
+
+	FBox GetFloorSpawnBoundingBox(UStaticMeshComponent *Floor);
 
 
 
