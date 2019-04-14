@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Tile_CPP.h"
+#include "DrawDebugHelpers.h"
 
 
 // Sets default values
@@ -11,9 +12,29 @@ ATile_CPP::ATile_CPP()
 
 }
 
+
+// Called when the game starts or when spawned
+void ATile_CPP::BeginPlay()
+{
+	Super::BeginPlay();
+
+	CastSphere(GetActorLocation() + FVector(0, 0, 0), 300);
+
+}
+
+// Called every frame
+void ATile_CPP::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+
+
 void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, int MinSpawn, int MaxSpawn)
 {
 
+	
 	FBox SpawnBoundingBox;
 	FBoxSphereBounds FloorBounds;
 	FVector FloorCenter;
@@ -57,17 +78,20 @@ void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, int MinSpawn, int MaxSpa
 
 }
 
-// Called when the game starts or when spawned
-void ATile_CPP::BeginPlay()
+bool ATile_CPP::CastSphere(FVector Location, float Radius)
 {
-	Super::BeginPlay();
-	
-}
+	FHitResult HitResult;
+	bool HasHit=GetWorld()->SweepSingleByChannel(
+		HitResult,
+		Location,
+		Location,
+		FQuat::Identity,
+		ECollisionChannel::ECC_GameTraceChannel2,
+		FCollisionShape::MakeSphere(Radius));
 
-// Called every frame
-void ATile_CPP::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+	FColor ResultColor = HasHit ? FColor::Red: FColor::Green;
+	DrawDebugCapsule(GetWorld(), Location, 0, Radius, FQuat::Identity, ResultColor, true, 100);
 
+	return HasHit;
 }
 
