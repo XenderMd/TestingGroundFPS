@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "Tile_CPP.generated.h"
 
+class UHierarchicalInstancedStaticMeshComponent;
+
 UCLASS()
 class TESTINGGROUNDFPS_API ATile_CPP : public AActor
 {
@@ -17,6 +19,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Setup")
 	void PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpawn, int MaxSpawn, float MinScale=1, float MaxScale=1);
+
+	UFUNCTION(BlueprintCallable, Category = "Setup")
+	void PlaceGrass(UHierarchicalInstancedStaticMeshComponent *Grass, int NumToPlace);
 
 private:
 	bool CanSpawnAtLocation(FVector Location, float Radius);
@@ -37,8 +42,4 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-
-
-	
-	
 };

@@ -2,14 +2,14 @@
 
 #include "Tile_CPP.h"
 #include "DrawDebugHelpers.h"
-
+#include "Components/SceneComponent.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
 
 // Sets default values
 ATile_CPP::ATile_CPP()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 
@@ -23,7 +23,6 @@ void ATile_CPP::BeginPlay()
 void ATile_CPP::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 
@@ -57,6 +56,31 @@ void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpa
 		}
 	}
 
+}
+
+void ATile_CPP::PlaceGrass(UHierarchicalInstancedStaticMeshComponent *Grass, int NumToPlace)
+{
+	//UHierarchicalInstancedStaticMeshComponent * Grass;
+	UStaticMeshComponent *Floor;
+	FBox SpawnBoundingBox;
+	FVector GrassPoint;
+
+
+	Floor = Cast<UStaticMeshComponent>(FindComponentByClass<UStaticMeshComponent>());
+	//Grass = Cast<UHierarchicalInstancedStaticMeshComponent>(FindComponentByClass<UHierarchicalInstancedStaticMeshComponent>());
+
+
+	if (Floor!=nullptr)
+	{
+		SpawnBoundingBox = GetFloorSpawnBoundingBox(Floor);
+
+		for (int i = 0; i < NumToPlace; i++)
+		{
+				//float RandomRotation = FMath::RandRange(-180.f, 180.f);
+			    GrassPoint=FMath::RandPointInBox(SpawnBoundingBox);
+				Grass->AddInstance(FTransform(GetTransform().InverseTransformPosition(GrassPoint)));
+		}
+	}
 }
 
 bool ATile_CPP::FindEmptyLocation(float Radius, FBox SpawnBoundingBox, FVector &OutSpawnPoint)
