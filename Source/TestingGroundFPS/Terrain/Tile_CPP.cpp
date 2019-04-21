@@ -29,20 +29,22 @@ void ATile_CPP::Tick(float DeltaTime)
 
 void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpawn, int MaxSpawn, float MinScale, float MaxScale)
 {
-
-	
-	FBox SpawnBoundingBox;
-	FVector SpawnPoint;
-	UStaticMeshComponent *Floor;
-	int NumberToSpawn = FMath::RandRange(MinSpawn, MaxSpawn);
-	float RandomScale = FMath::FRandRange(MinScale, MaxScale);
-	
 	//Get a reference to the Tile floor component
-	Floor = Cast<UStaticMeshComponent>(FindComponentByClass<UStaticMeshComponent>());
-
+	UStaticMeshComponent *Floor = GetFloorComponent();
+	
 	//Check for null pointer
-	if (Floor != nullptr)
+	if (Floor == nullptr)
 	{
+		return;
+	}
+	
+	else
+	{
+		FBox SpawnBoundingBox;
+		FVector SpawnPoint;
+		int NumberToSpawn = FMath::RandRange(MinSpawn, MaxSpawn);
+		float RandomScale = FMath::FRandRange(MinScale, MaxScale);
+
 		SpawnBoundingBox = GetFloorSpawnBoundingBox(Floor);
 
 		//Spawn objects
@@ -60,20 +62,18 @@ void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpa
 
 void ATile_CPP::PlaceGrass(UHierarchicalInstancedStaticMeshComponent *Grass, int NumToPlace)
 {
-	//UHierarchicalInstancedStaticMeshComponent * Grass;
-	UStaticMeshComponent *Floor;
+	
+	UStaticMeshComponent *Floor= GetFloorComponent();
 	FBox SpawnBoundingBox;
 	FVector GrassPoint;
-
-
-	Floor = Cast<UStaticMeshComponent>(FindComponentByClass<UStaticMeshComponent>());
-	//Grass = Cast<UHierarchicalInstancedStaticMeshComponent>(FindComponentByClass<UHierarchicalInstancedStaticMeshComponent>());
-
-
-	if (Floor!=nullptr)
+	
+	if (Floor == nullptr)
+	{
+		return;
+	}
+	else
 	{
 		SpawnBoundingBox = GetFloorSpawnBoundingBox(Floor);
-
 		for (int i = 0; i < NumToPlace; i++)
 		{
 				//float RandomRotation = FMath::RandRange(-180.f, 180.f);
@@ -81,6 +81,7 @@ void ATile_CPP::PlaceGrass(UHierarchicalInstancedStaticMeshComponent *Grass, int
 				Grass->AddInstance(FTransform(GetTransform().InverseTransformPosition(GrassPoint)));
 		}
 	}
+
 }
 
 bool ATile_CPP::FindEmptyLocation(float Radius, FBox SpawnBoundingBox, FVector &OutSpawnPoint)
@@ -94,8 +95,6 @@ bool ATile_CPP::FindEmptyLocation(float Radius, FBox SpawnBoundingBox, FVector &
 		CandidatePoint = FMath::RandPointInBox(SpawnBoundingBox);
 		isFound=CanSpawnAtLocation(CandidatePoint, Radius);
 	}
-
-
 	if (isFound) {OutSpawnPoint = CandidatePoint;}
 	return isFound;
 }
@@ -134,6 +133,37 @@ FBox ATile_CPP::GetFloorSpawnBoundingBox(UStaticMeshComponent * Floor)
 	SpawnBoundingBox = FBox(Min, Max);
 
 	return SpawnBoundingBox;
+}
+
+UActorComponent * ATile_CPP::GetActorFromArray(TArray<UActorComponent*> Components, FString Name)
+{
+	UActorComponent* ReturnComponent = nullptr;
+
+	for (UActorComponent* Component : Components)
+	{
+		if (Component->GetName() == Name) { ReturnComponent = Component; }
+	}
+	return ReturnComponent;
+}
+
+UStaticMeshComponent * ATile_CPP::GetFloorComponent()
+{
+	UActorComponent *Component=nullptr;
+	UStaticMeshComponent* Floor = nullptr;
+	
+	//Get a reference to the Tile floor component
+	const TArray<UActorComponent*> Components = GetComponentsByClass(UStaticMeshComponent::StaticClass());
+	Component = GetActorFromArray(Components, FString("Floor"));
+
+	if (Component != nullptr) 
+	{ 
+		Floor = Cast<UStaticMeshComponent>(Component);
+		return Floor;
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
 bool ATile_CPP::CanSpawnAtLocation(FVector Location, float Radius)

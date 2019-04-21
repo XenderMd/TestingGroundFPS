@@ -32,6 +32,10 @@ private:
 
 	FBox GetFloorSpawnBoundingBox(UStaticMeshComponent *Floor);
 
+	UActorComponent* GetActorFromArray(TArray<UActorComponent*> Components, FString Name);
+
+	UStaticMeshComponent * GetFloorComponent();
+
 
 
 protected:
