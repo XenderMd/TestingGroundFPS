@@ -3,6 +3,7 @@
 #include "Tile_CPP.h"
 #include "DrawDebugHelpers.h"
 #include "Components/SceneComponent.h"
+#include "GameModes/ActorPool.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 
 // Sets default values
@@ -82,6 +83,11 @@ void ATile_CPP::PlaceGrass(UHierarchicalInstancedStaticMeshComponent *Grass, int
 		}
 	}
 
+}
+
+void ATile_CPP::SetActorPool(UActorPool *PoolToSet)
+{
+	ActorPool = PoolToSet;
 }
 
 bool ATile_CPP::FindEmptyLocation(float Radius, FBox SpawnBoundingBox, FVector &OutSpawnPoint)

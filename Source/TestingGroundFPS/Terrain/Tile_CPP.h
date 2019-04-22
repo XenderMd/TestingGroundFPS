@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Tile_CPP.generated.h"
 
+class UActorPool;
 class UHierarchicalInstancedStaticMeshComponent;
 
 UCLASS()
@@ -23,6 +24,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Setup")
 	void PlaceGrass(UHierarchicalInstancedStaticMeshComponent *Grass, int NumToPlace);
 
+	UFUNCTION(BlueprintCallable, Category = "Setup")
+	void SetActorPool(UActorPool *PoolToSet);
+
 private:
 	bool CanSpawnAtLocation(FVector Location, float Radius);
 
@@ -35,6 +39,8 @@ private:
 	UActorComponent* GetActorFromArray(TArray<UActorComponent*> Components, FString Name);
 
 	UStaticMeshComponent * GetFloorComponent();
+
+	UActorPool * ActorPool;
 
 
 
