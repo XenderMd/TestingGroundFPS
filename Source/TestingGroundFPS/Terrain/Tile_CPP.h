@@ -42,11 +42,16 @@ private:
 
 	UActorPool * ActorPool;
 
+	AActor * NavMeshBoundsVolume=nullptr;
+
+	void PositionNavMeshBoundsVolume();
+
 
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
 	// Called every frame

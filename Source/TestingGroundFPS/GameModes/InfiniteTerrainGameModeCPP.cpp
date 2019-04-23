@@ -13,7 +13,7 @@ AInfiniteTerrainGameModeCPP::AInfiniteTerrainGameModeCPP()
 
 void AInfiniteTerrainGameModeCPP::AddtoPool(ANavMeshBoundsVolume * VolumeToAdd)
 {
-	UE_LOG(LogTemp, Warning, TEXT("NaveMesh name is: %s"), *VolumeToAdd->GetName());
+	NavMeshBoundsVolumePool->Add(VolumeToAdd);
 }
 
 

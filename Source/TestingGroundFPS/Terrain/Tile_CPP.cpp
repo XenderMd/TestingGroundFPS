@@ -20,6 +20,13 @@ void ATile_CPP::BeginPlay()
 	Super::BeginPlay();
 }
 
+void ATile_CPP::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	ActorPool->Return(NavMeshBoundsVolume);
+}
+
 // Called every frame
 void ATile_CPP::Tick(float DeltaTime)
 {
@@ -88,6 +95,25 @@ void ATile_CPP::PlaceGrass(UHierarchicalInstancedStaticMeshComponent *Grass, int
 void ATile_CPP::SetActorPool(UActorPool *PoolToSet)
 {
 	ActorPool = PoolToSet;
+
+	PositionNavMeshBoundsVolume();
+
+}
+
+void ATile_CPP::PositionNavMeshBoundsVolume()
+{
+	NavMeshBoundsVolume = ActorPool->Checkout();
+
+	if (NavMeshBoundsVolume == nullptr) 
+	{ 
+		UE_LOG(LogTemp, Warning, TEXT("Not enough actors in the Actor Pool !"));
+		return; 
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Setting NavMeshLocation [%s] !"), *NavMeshBoundsVolume->GetName());
+		//NavMeshBoundsVolume->SetActorLocation(GetActorLocation());
+	}
 }
 
 bool ATile_CPP::FindEmptyLocation(float Radius, FBox SpawnBoundingBox, FVector &OutSpawnPoint)
