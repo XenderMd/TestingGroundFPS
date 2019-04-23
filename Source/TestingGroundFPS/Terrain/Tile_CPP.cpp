@@ -111,8 +111,7 @@ void ATile_CPP::PositionNavMeshBoundsVolume()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Setting NavMeshLocation [%s] !"), *NavMeshBoundsVolume->GetName());
-		//NavMeshBoundsVolume->SetActorLocation(GetActorLocation());
+		NavMeshBoundsVolume->SetActorLocation(GetActorLocation());
 	}
 }
 
