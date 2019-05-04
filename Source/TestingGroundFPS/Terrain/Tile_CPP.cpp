@@ -38,35 +38,53 @@ void ATile_CPP::Tick(float DeltaTime)
 
 void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpawn, int MaxSpawn, float MinScale, float MaxScale)
 {
+	SpawnPositions = GenerateSpawnPositions(Radius, MinSpawn, MaxSpawn, MinScale, MaxScale);
+
+	if (SpawnPositions.Num() > 0)
+	{
+		for(FSpawnPosition SpawnPosition:SpawnPositions)
+		{
+			PlaceActor(ToSpawn, SpawnPosition);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("There are no SpawnPositions to use !"));
+		return;
+	}
+}
+
+TArray<FSpawnPosition> ATile_CPP::GenerateSpawnPositions(float Radius, int MinSpawn, int MaxSpawn, float MinScale, float MaxScale)
+{
+	
+	TArray<FSpawnPosition> Positions;
 	//Get a reference to the Tile floor component
 	UStaticMeshComponent *Floor = GetFloorComponent();
 	
 	//Check for null pointer
 	if (Floor == nullptr)
 	{
-		return;
+		UE_LOG(LogTemp, Warning, TEXT("There is no valid Floor for the Tile Actor: returning empty SpawnPositions"));
+		return Positions;
 	}
-	
 	else
 	{
-		FBox SpawnBoundingBox;
-		FVector SpawnPoint;
+		FBox SpawnBoundingBox = GetFloorSpawnBoundingBox(Floor);
 		int NumberToSpawn = FMath::RandRange(MinSpawn, MaxSpawn);
-		float RandomScale = FMath::FRandRange(MinScale, MaxScale);
 
-		SpawnBoundingBox = GetFloorSpawnBoundingBox(Floor);
-
-		//Spawn objects
 		for (size_t i = 0; i < NumberToSpawn; i++)
 		{
-			if (FindEmptyLocation(Radius*RandomScale, SpawnBoundingBox, SpawnPoint))
+			FSpawnPosition SpawnPosition;
+		
+			if (FindEmptyLocation(Radius*SpawnPosition.Scale, SpawnBoundingBox, SpawnPosition.Location))
 			{
-				float RandomRotation = FMath::RandRange(-180.f, 180.f);
-				PlaceActor(ToSpawn, SpawnPoint, RandomRotation, RandomScale);
+				SpawnPosition.Scale = FMath::FRandRange(MinScale, MaxScale);
+				SpawnPosition.Rotation = FMath::RandRange(-180.f, 180.f);
+				Positions.Add(SpawnPosition);
 			}
 		}
+		return Positions;
 	}
-
 }
 
 void ATile_CPP::PlaceGrass(UHierarchicalInstancedStaticMeshComponent *Grass, int NumToPlace)
@@ -139,14 +157,14 @@ bool ATile_CPP::FindEmptyLocation(float Radius, FBox SpawnBoundingBox, FVector &
 	return isFound;
 }
 
-void ATile_CPP::PlaceActor(TSubclassOf<AActor> ToSpawn, FVector SpawnPoint, float Rotation, float Scale)
+void ATile_CPP::PlaceActor(TSubclassOf<AActor> ToSpawn, const FSpawnPosition &SpawnPosition)
 {
 
-	AActor *Spawned = GetWorld()->SpawnActor<AActor>(ToSpawn, SpawnPoint, GetActorRotation());
+	AActor *Spawned = GetWorld()->SpawnActor<AActor>(ToSpawn, SpawnPosition.Location, GetActorRotation());
 	// Since we used World coordinates -> EAttachmentRule::KeepWorld
 	Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
-	Spawned->SetActorRotation(FRotator(0, Rotation, 0));
-	Spawned->SetActorScale3D(FVector(Scale));
+	Spawned->SetActorRotation(FRotator(0, SpawnPosition.Rotation, 0));
+	Spawned->SetActorScale3D(FVector(SpawnPosition.Scale));
 
 }
 
