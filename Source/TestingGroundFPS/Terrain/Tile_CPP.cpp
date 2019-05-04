@@ -38,7 +38,7 @@ void ATile_CPP::Tick(float DeltaTime)
 
 void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpawn, int MaxSpawn, float MinScale, float MaxScale)
 {
-	SpawnPositions = GenerateSpawnPositions(Radius, MinSpawn, MaxSpawn, MinScale, MaxScale);
+	TArray<FSpawnPosition> SpawnPositions= GenerateSpawnPositions(Radius, MinSpawn, MaxSpawn, MinScale, MaxScale);
 
 	if (SpawnPositions.Num() > 0)
 	{
@@ -49,7 +49,25 @@ void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpa
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("There are no SpawnPositions to use !"));
+		UE_LOG(LogTemp, Warning, TEXT("PlaceActors:: There are no SpawnPositions to use !"));
+		return;
+	}
+}
+
+void ATile_CPP::PlaceAIPawns(TSubclassOf<APawn> ToSpawn, float Radius, int MinSpawn, int MaxSpawn)
+{
+	TArray<FSpawnPosition> SpawnPositions = GenerateSpawnPositions(Radius, MinSpawn, MaxSpawn, 1.0, 1.0);
+
+	if (SpawnPositions.Num() > 0)
+	{
+		for (FSpawnPosition SpawnPosition : SpawnPositions)
+		{
+			PlaceAIPawn(ToSpawn, SpawnPosition);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlaceAIPawns::There are no SpawnPositions to use !"));
 		return;
 	}
 }
@@ -75,11 +93,12 @@ TArray<FSpawnPosition> ATile_CPP::GenerateSpawnPositions(float Radius, int MinSp
 		for (size_t i = 0; i < NumberToSpawn; i++)
 		{
 			FSpawnPosition SpawnPosition;
+			SpawnPosition.Scale = FMath::FRandRange(MinScale, MaxScale);
+			SpawnPosition.Rotation = FMath::RandRange(-180.f, 180.f);
+
 		
 			if (FindEmptyLocation(Radius*SpawnPosition.Scale, SpawnBoundingBox, SpawnPosition.Location))
 			{
-				SpawnPosition.Scale = FMath::FRandRange(MinScale, MaxScale);
-				SpawnPosition.Rotation = FMath::RandRange(-180.f, 180.f);
 				Positions.Add(SpawnPosition);
 			}
 		}
@@ -166,6 +185,18 @@ void ATile_CPP::PlaceActor(TSubclassOf<AActor> ToSpawn, const FSpawnPosition &Sp
 	Spawned->SetActorRotation(FRotator(0, SpawnPosition.Rotation, 0));
 	Spawned->SetActorScale3D(FVector(SpawnPosition.Scale));
 
+}
+
+void ATile_CPP::PlaceAIPawn(TSubclassOf<APawn> ToSpawn, const FSpawnPosition & SpawnPosition)
+{
+	APawn *Spawned = GetWorld()->SpawnActor<APawn>(ToSpawn, SpawnPosition.Location, GetActorRotation());
+	if (Spawned != nullptr)
+	{
+		Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
+		Spawned->Tags.Add(FName("Enemy"));
+		Spawned->SpawnDefaultController();
+		Spawned->SetActorRotation(FRotator(0, SpawnPosition.Rotation, 0));
+	}
 }
 
 FBox ATile_CPP::GetFloorSpawnBoundingBox(UStaticMeshComponent * Floor)

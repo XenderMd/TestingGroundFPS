@@ -33,6 +33,9 @@ public:
 	void PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpawn, int MaxSpawn, float MinScale=1, float MaxScale=1);
 
 	UFUNCTION(BlueprintCallable, Category = "Setup")
+	void PlaceAIPawns(TSubclassOf<APawn>ToSpawn, float Radius, int MinSpawn, int MaxSpawn);
+
+	UFUNCTION(BlueprintCallable, Category = "Setup")
 	void PlaceGrass(UHierarchicalInstancedStaticMeshComponent *Grass, int NumToPlace);
 
 	UFUNCTION(BlueprintCallable, Category = "Setup")
@@ -45,6 +48,8 @@ private:
 
 	void PlaceActor(TSubclassOf<AActor>ToSpawn, const FSpawnPosition &SpawnPosition);
 
+	void PlaceAIPawn(TSubclassOf<APawn>ToSpawn, const FSpawnPosition &SpawnPosition);
+
 	FBox GetFloorSpawnBoundingBox(UStaticMeshComponent *Floor);
 
 	UActorComponent* GetActorFromArray(TArray<UActorComponent*> Components, FString Name);
@@ -54,8 +59,6 @@ private:
 	UActorPool * ActorPool;
 
 	AActor * NavMeshBoundsVolume=nullptr;
-
-	TArray<FSpawnPosition> SpawnPositions;
 
 	void PositionNavMeshBoundsVolume();
 
