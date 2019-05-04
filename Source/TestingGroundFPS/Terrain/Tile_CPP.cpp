@@ -3,6 +3,7 @@
 #include "Tile_CPP.h"
 #include "DrawDebugHelpers.h"
 #include "Components/SceneComponent.h"
+#include "NavigationSystem.h"
 #include "GameModes/ActorPool.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 
@@ -102,7 +103,14 @@ void ATile_CPP::SetActorPool(UActorPool *PoolToSet)
 
 void ATile_CPP::PositionNavMeshBoundsVolume()
 {
+	//Determining the required offset (on the X Axis) to accurately position the NavMesh
+	//Based on the extent of the Floor bounding box 
+	UStaticMeshComponent *Floor = GetFloorComponent();
+	FBox SpawnBoundingBox = GetFloorSpawnBoundingBox(Floor);
+	FVector OffSet = FVector(SpawnBoundingBox.GetExtent().X, 0, 0);
+
 	NavMeshBoundsVolume = ActorPool->Checkout();
+
 
 	if (NavMeshBoundsVolume == nullptr) 
 	{ 
@@ -111,7 +119,8 @@ void ATile_CPP::PositionNavMeshBoundsVolume()
 	}
 	else
 	{
-		NavMeshBoundsVolume->SetActorLocation(GetActorLocation());
+		NavMeshBoundsVolume->SetActorLocation(GetActorLocation()+OffSet);
+		UNavigationSystemV1::GetNavigationSystem(GetWorld())->Build();
 	}
 }
 
