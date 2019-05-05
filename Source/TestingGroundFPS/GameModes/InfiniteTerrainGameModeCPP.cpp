@@ -16,6 +16,26 @@ void AInfiniteTerrainGameModeCPP::AddtoPool(ANavMeshBoundsVolume * VolumeToAdd)
 	NavMeshBoundsVolumePool->Add(VolumeToAdd);
 }
 
+void AInfiniteTerrainGameModeCPP::InitializeScore()
+{
+	score = 0;
+}
+
+void AInfiniteTerrainGameModeCPP::NewTileConquered()
+{
+	score = score++;
+}
+
+int AInfiniteTerrainGameModeCPP::GetScore()
+{
+	return score;
+}
+
+void AInfiniteTerrainGameModeCPP::SetScore(int NewScore)
+{
+	score = NewScore;
+}
+
 
 void AInfiniteTerrainGameModeCPP::PopulateBoundsVolumePool()
 {
