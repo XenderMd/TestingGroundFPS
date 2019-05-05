@@ -44,11 +44,14 @@ public:
 private:
 	bool CanSpawnAtLocation(FVector Location, float Radius);
 
+	template<class T>
+	void RandomlyPlaceActors(TSubclassOf<T>ToSpawn, float Radius, int MinSpawn, int MaxSpawn, float MinScale = 1, float MaxScale = 1);
+
 	bool FindEmptyLocation(float Radius, FBox SpawnBoundingBox, FVector &OutSpawnPoint);
 
 	void PlaceActor(TSubclassOf<AActor>ToSpawn, const FSpawnPosition &SpawnPosition);
-
-	void PlaceAIPawn(TSubclassOf<APawn>ToSpawn, const FSpawnPosition &SpawnPosition);
+	
+	void PlaceActor(TSubclassOf<APawn>ToSpawn, const FSpawnPosition &SpawnPosition);
 
 	FBox GetFloorSpawnBoundingBox(UStaticMeshComponent *Floor);
 
@@ -61,9 +64,6 @@ private:
 	AActor * NavMeshBoundsVolume=nullptr;
 
 	void PositionNavMeshBoundsVolume();
-
-	TArray<FSpawnPosition> GenerateSpawnPositions(float Radius, int MinSpawn, int MaxSpawn, float MinScale, float MaxScale);
-
 
 
 protected:

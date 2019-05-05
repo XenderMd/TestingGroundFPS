@@ -3,9 +3,11 @@
 #include "Tile_CPP.h"
 #include "DrawDebugHelpers.h"
 #include "Components/SceneComponent.h"
+#include "Character/MannequinCPP.h"
 #include "NavigationSystem.h"
 #include "GameModes/ActorPool.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "Classes/GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 ATile_CPP::ATile_CPP()
@@ -34,56 +36,16 @@ void ATile_CPP::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-
-
-void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpawn, int MaxSpawn, float MinScale, float MaxScale)
+template<class T>
+inline void ATile_CPP::RandomlyPlaceActors(TSubclassOf<T> ToSpawn, float Radius, int MinSpawn, int MaxSpawn, float MinScale, float MaxScale)
 {
-	TArray<FSpawnPosition> SpawnPositions= GenerateSpawnPositions(Radius, MinSpawn, MaxSpawn, MinScale, MaxScale);
-
-	if (SpawnPositions.Num() > 0)
-	{
-		for(FSpawnPosition SpawnPosition:SpawnPositions)
-		{
-			PlaceActor(ToSpawn, SpawnPosition);
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlaceActors:: There are no SpawnPositions to use !"));
-		return;
-	}
-}
-
-void ATile_CPP::PlaceAIPawns(TSubclassOf<APawn> ToSpawn, float Radius, int MinSpawn, int MaxSpawn)
-{
-	TArray<FSpawnPosition> SpawnPositions = GenerateSpawnPositions(Radius, MinSpawn, MaxSpawn, 1.0, 1.0);
-
-	if (SpawnPositions.Num() > 0)
-	{
-		for (FSpawnPosition SpawnPosition : SpawnPositions)
-		{
-			PlaceAIPawn(ToSpawn, SpawnPosition);
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlaceAIPawns::There are no SpawnPositions to use !"));
-		return;
-	}
-}
-
-TArray<FSpawnPosition> ATile_CPP::GenerateSpawnPositions(float Radius, int MinSpawn, int MaxSpawn, float MinScale, float MaxScale)
-{
-	
-	TArray<FSpawnPosition> Positions;
-	//Get a reference to the Tile floor component
 	UStaticMeshComponent *Floor = GetFloorComponent();
-	
+
 	//Check for null pointer
 	if (Floor == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("There is no valid Floor for the Tile Actor: returning empty SpawnPositions"));
-		return Positions;
+		UE_LOG(LogTemp, Warning, TEXT("There is no valid Floor for the Tile Actor: cannot spawn Actors"));
+		return;
 	}
 	else
 	{
@@ -96,14 +58,25 @@ TArray<FSpawnPosition> ATile_CPP::GenerateSpawnPositions(float Radius, int MinSp
 			SpawnPosition.Scale = FMath::FRandRange(MinScale, MaxScale);
 			SpawnPosition.Rotation = FMath::RandRange(-180.f, 180.f);
 
-		
+
 			if (FindEmptyLocation(Radius*SpawnPosition.Scale, SpawnBoundingBox, SpawnPosition.Location))
 			{
-				Positions.Add(SpawnPosition);
+				PlaceActor(ToSpawn, SpawnPosition);
 			}
 		}
-		return Positions;
+
 	}
+
+}
+
+void ATile_CPP::PlaceActors(TSubclassOf<AActor>ToSpawn, float Radius, int MinSpawn, int MaxSpawn, float MinScale, float MaxScale)
+{
+	RandomlyPlaceActors(ToSpawn, Radius, MinSpawn, MaxSpawn, MinScale, MaxScale);
+}
+
+void ATile_CPP::PlaceAIPawns(TSubclassOf<APawn> ToSpawn, float Radius, int MinSpawn, int MaxSpawn)
+{
+	RandomlyPlaceActors(ToSpawn, Radius, MinSpawn, MaxSpawn, 1, 1);
 }
 
 void ATile_CPP::PlaceGrass(UHierarchicalInstancedStaticMeshComponent *Grass, int NumToPlace)
@@ -181,14 +154,23 @@ void ATile_CPP::PlaceActor(TSubclassOf<AActor> ToSpawn, const FSpawnPosition &Sp
 
 	AActor *Spawned = GetWorld()->SpawnActor<AActor>(ToSpawn, SpawnPosition.Location, GetActorRotation());
 	// Since we used World coordinates -> EAttachmentRule::KeepWorld
-	Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
-	Spawned->SetActorRotation(FRotator(0, SpawnPosition.Rotation, 0));
-	Spawned->SetActorScale3D(FVector(SpawnPosition.Scale));
+
+	if (Spawned==nullptr)
+	{
+		return;
+	}
+	else
+	{
+		Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
+		Spawned->SetActorRotation(FRotator(0, SpawnPosition.Rotation, 0));
+		Spawned->SetActorScale3D(FVector(SpawnPosition.Scale));
+	}
 
 }
 
-void ATile_CPP::PlaceAIPawn(TSubclassOf<APawn> ToSpawn, const FSpawnPosition & SpawnPosition)
+void ATile_CPP::PlaceActor(TSubclassOf<APawn> ToSpawn, const FSpawnPosition &SpawnPosition)
 {
+
 	APawn *Spawned = GetWorld()->SpawnActor<APawn>(ToSpawn, SpawnPosition.Location, GetActorRotation());
 	if (Spawned != nullptr)
 	{
@@ -196,6 +178,7 @@ void ATile_CPP::PlaceAIPawn(TSubclassOf<APawn> ToSpawn, const FSpawnPosition & S
 		Spawned->Tags.Add(FName("Enemy"));
 		Spawned->SpawnDefaultController();
 		Spawned->SetActorRotation(FRotator(0, SpawnPosition.Rotation, 0));
+		Cast<ACharacter>(Spawned)->GetCharacterMovement()->MaxWalkSpeed = 400;
 	}
 }
 
